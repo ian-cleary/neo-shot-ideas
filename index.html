@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Neo Shot Ideas — a fresh flying project every day</title>
+<meta name="description" content="Every launch, a fresh DJI Neo / Neo 2 project idea picked for where you are — shots, camera settings and composition, plus a flying-skills mission for Ronnie.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0d1418">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Shot Ideas">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root{
+  --bg:#0d1418;--surface:#152027;--surface-2:#1d2b33;--ink:#edf2f4;--muted:#afbcc3;--line:#34434c;
+  --accent:#f5c847;--accent-ink:#1a1707;--amber:#f2b84b;--amber-soft:#3e321a;
+  --green:#54d49c;--red:#ff6e75;
+  --shadow:0 16px 34px rgba(0,0,0,.32);--radius:20px;
+}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+*{box-sizing:border-box}
+body{margin:0;padding-top:env(safe-area-inset-top);background:var(--bg);color:var(--ink);
+  font-family:"Source Sans 3",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:19px;line-height:1.55}
+button{font:inherit;touch-action:manipulation}
+button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.topline{height:8px;background:linear-gradient(90deg,var(--accent) 0 60%,var(--green) 60% 82%,var(--amber) 82%)}
+.wrap{max-width:640px;margin:0 auto;padding:26px max(20px,env(safe-area-inset-right)) 120px max(20px,env(safe-area-inset-left))}
+.meta{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+h1{font-weight:800;font-size:clamp(46px,12vw,72px);line-height:.95;margin:10px 0 8px;letter-spacing:.01em}
+h1 .amber{color:var(--accent)}
+.lede{font-size:20px;color:var(--muted);margin:0 0 26px;max-width:36ch}
+.big-btn{display:block;width:100%;border:0;border-radius:var(--radius);background:var(--accent);color:var(--accent-ink);
+  font-weight:800;font-size:clamp(30px,8vw,42px);letter-spacing:.01em;
+  padding:28px 18px;margin:8px 0 14px;box-shadow:var(--shadow);cursor:pointer;min-height:96px}
+.big-btn:active{transform:scale(.985)}
+.big-btn[disabled]{opacity:.6;cursor:wait}
+.ghost-btn{display:block;width:100%;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);
+  color:var(--ink);font-weight:700;font-size:20px;padding:18px;margin:12px 0;cursor:pointer;min-height:64px}
+.card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;margin:18px 0}
+.kind-tag{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--accent-ink);background:var(--accent);
+  border-radius:999px;padding:6px 14px;margin-bottom:12px;font-weight:700}
+.card h2{font-size:34px;line-height:1.1;margin:0 0 6px}
+.place-line{font-size:20px;color:var(--accent);font-weight:700;margin:0 0 14px}
+.steps{margin:14px 0 0;padding:0;list-style:none;counter-reset:st}
+.steps li{counter-increment:st;position:relative;padding:12px 0 12px 58px;font-size:20px;border-top:1px solid var(--line)}
+.steps li:first-child{border-top:0}
+.steps li::before{content:counter(st);position:absolute;left:0;top:12px;width:42px;height:42px;border-radius:50%;
+  background:var(--surface-2);color:var(--accent);font-weight:800;font-size:22px;
+  display:flex;align-items:center;justify-content:center;border:2px solid var(--accent)}
+.idea-note{margin:16px 0 0;padding:14px 16px;background:var(--surface-2);border-radius:14px;font-size:19px;color:var(--muted)}
+.idea-note b{color:var(--ink)}
+.ronnie{border-left:10px solid var(--accent);background:#1a1610}
+.ronnie .kind-tag{background:var(--accent)}
+.ronnie h2{font-size:30px}
+.ronnie .badge{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;letter-spacing:.09em;
+  color:var(--accent);margin:0 0 8px;text-transform:uppercase}
+.ronnie p{font-size:21px;margin:8px 0 0}
+.air-banner{background:var(--amber-soft);border:2px solid var(--amber);border-radius:14px;
+  padding:16px 18px;font-size:20px;margin:18px 0;color:var(--ink)}
+.air-banner b{color:var(--amber)}
+.loc-line{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;color:var(--muted);margin:4px 0 0}
+.loading{text-align:center;padding:60px 10px}
+.loading .big{font-size:26px;font-weight:700;margin:18px 0 6px}
+.loading .sub{font-size:19px;color:var(--muted)}
+.spin{display:inline-block;width:44px;height:44px;border:5px solid rgba(255,255,255,.2);border-top-color:var(--accent);
+  border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.fly-footer{position:fixed;left:0;right:0;bottom:0;z-index:50;background:#0a0f12f2;border-top:2px solid var(--line);
+  padding:12px max(16px,env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
+  font-size:15px;color:var(--muted);text-align:center}
+.fly-footer b{color:var(--ink)}
+.fly-footer a{color:var(--accent);font-weight:700}
+.who-box{background:var(--surface);border:2px solid var(--line);border-radius:var(--radius);padding:18px;margin:0 0 20px}
+.who-label{font-size:24px;font-weight:800;margin:0 0 12px}
+.who-row{display:flex;gap:12px}
+.who-btn{flex:1;border:2px solid var(--line);border-radius:16px;background:var(--surface-2);color:var(--ink);
+  font-weight:800;font-size:clamp(22px,6vw,30px);padding:20px 8px;min-height:92px;cursor:pointer}
+.who-btn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.who-sub{font-size:17px;color:var(--muted);margin:12px 0 0}
+.drone-chip{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:15px;
+  letter-spacing:.04em;color:var(--accent);background:#22303a;border:1px solid var(--line);
+  border-radius:999px;padding:7px 14px;margin:0 0 14px}
+.ladder-hero h2{font-size:40px}
+.ladder-hero .mission-text{font-size:25px;line-height:1.5;margin:10px 0 14px}
+.ladder-hero .level-line{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;color:var(--muted);margin:10px 0 0}
+.hidden{display:none!important}
+.fineprint{font-size:16px;color:var(--muted);margin-top:20px}
+.count-line{font-size:16px;color:var(--muted);margin:10px 0 0;text-align:center}
+</style>
+</head>
+<body>
+<div class="topline"></div>
+<div class="wrap">
+
+  <div class="who-box" role="group" aria-label="Who's flying today">
+    <p class="who-label">Who's flying today?</p>
+    <div class="who-row">
+      <button class="who-btn" data-who="alan" aria-pressed="true">Alan</button>
+      <button class="who-btn" data-who="ronnie" aria-pressed="false">Ronnie</button>
+      <button class="who-btn" data-who="both" aria-pressed="false">Both</button>
+    </div>
+    <p class="who-sub" id="who-sub">Neo 2 projects for Alan</p>
+  </div>
+
+  <section id="screen-loading">
+    <p class="meta">Neo Shot Ideas</p>
+    <div class="loading">
+      <span class="spin" aria-hidden="true"></span>
+      <p class="big" id="loading-big">Looking around for somewhere worth filming…</p>
+      <p class="sub" id="loading-sub">Checking your location and what's nearby.</p>
+    </div>
+  </section>
+
+  <section id="screen-idea" class="hidden">
+    <p class="meta" id="idea-kicker">Today's flying project</p>
+    <h1 id="idea-eyebrow">TODAY'S <span class="amber">SHOT</span></h1>
+    <p class="loc-line" id="idea-loc"></p>
+    <div id="air-banner" class="air-banner hidden"></div>
+    <div class="card ronnie ladder-hero hidden" id="ladder-hero">
+      <p class="badge" id="ladder-badge">Ronnie's mission</p>
+      <h2 id="ladder-title">—</h2>
+      <p class="mission-text" id="ladder-text"></p>
+      <p class="drone-chip" id="ladder-drone"></p>
+      <p class="loc-line" id="ladder-place"></p>
+      <p class="level-line" id="ladder-level"></p>
+    </div>
+    <div class="card" id="idea-card">
+      <span class="kind-tag" id="idea-kind">Shot</span>
+      <h2 id="idea-title">—</h2>
+      <p class="place-line" id="idea-place"></p>
+      <p class="drone-chip" id="idea-drone"></p>
+      <ol class="steps" id="idea-steps"></ol>
+      <p class="idea-note" id="idea-note"></p>
+    </div>
+    <div class="card ronnie" id="ronnie-card">
+      <p class="badge" id="ronnie-badge">Ronnie's mission</p>
+      <h2 id="ronnie-title">—</h2>
+      <p id="ronnie-text"></p>
+      <p class="drone-chip" id="ronnie-drone"></p>
+    </div>
+    <button class="big-btn" id="btn-another">Give me another idea</button>
+    <button class="ghost-btn" id="btn-relocate">Use my location</button>
+    <p class="count-line" id="count-line"></p>
+    <div class="card hidden" id="ios-hint">
+      <h2>Install this app</h2>
+      <p class="fineprint" style="margin:0 0 10px">On iPhone: tap <b>Share</b> in Safari, then <b>Add to Home Screen</b> — it opens full-screen like a native app and works offline.</p>
+      <button class="ghost-btn" id="ios-hint-dismiss" style="margin:0">Got it</button>
+    </div>
+    <p class="fineprint">Ideas only — always check the Drone Assist app and the official geozone map before launching. Rules change; this page can't see NOTAMs or live restrictions.</p>
+  </section>
+
+</div>
+<footer class="fly-footer">
+  <b>Before you fly:</b> keep the drone in sight · 120&nbsp;m max height · never over crowds · operator ID on the drone · <a href="https://www.caa.co.uk/drones" target="_blank" rel="noopener">CAA Drone Code</a>
+</footer>
+<script src="engine.js"></script>
+<script src="app.js"></script>
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
+(function(){
+  var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent||'');
+  var standalone=(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;
+  var dismissed=false;
+  try{dismissed=localStorage.getItem('nsi_ios_hint')==='1';}catch(e){}
+  if(isIOS&&!standalone&&!dismissed){
+    var hint=document.getElementById('ios-hint');
+    hint.classList.remove('hidden');
+    document.getElementById('ios-hint-dismiss').addEventListener('click',function(){
+      hint.classList.add('hidden');
+      try{localStorage.setItem('nsi_ios_hint','1');}catch(e){}
+    });
+  }
+})();
+</script>
+</body>
+</html>
