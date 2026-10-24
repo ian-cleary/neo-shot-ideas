@@ -16,6 +16,12 @@ var KIND_WORDS={church:"church",castle:"castle",ruins:"ruins",monument:"monument
  coast:"beach",park:"park",nature:"nature reserve",river:"river",village:"village green",garden:"garden",sky:"sky"};
 
 var WHO_KEY="nsi_who";
+/* Restricted airspace (FlySafe's restricted.json): fetched network-first at
+   boot and on relocate, cached in localStorage for up to 14 days. A failed
+   load with no fresh cache means "unavailable" — never "clear". */
+var AIRSPACE_URL="https://ian-cleary.github.io/can-i-fly-here/restricted.json";
+var AIRSPACE_KEY="nsi_airspace";
+var AIRSPACE_MAX_AGE=14*24*3600*1000;
 var WHOS=["alan","ronnie","both"];
 var WHO_META={
   alan:{sub:"Neo 2 projects for Alan",btn:"Give me another idea"},
@@ -34,7 +40,7 @@ function tagElement(e,lat,lon){
   var la=e.type==="node"?e.lat:(e.center&&e.center.lat);
   var lo=e.type==="node"?e.lon:(e.center&&e.center.lon);
   var d=(la==null||lo==null)?null:haversine(lat,lon,la,lo);
-  if(t.aeroway)return {airfield:true,name:t.name||null,distKm:d,subjects:[],kindWord:"airfield"};
+  if(t.aeroway)return {airfield:true,name:t.name||null,distKm:d,subjects:[],kindWord:"airfield",lat:la,lon:lo};
   var s=[];
   if(t.tourism==="attraction")s.push("attraction");
   else if(t.tourism==="viewpoint")s.push("viewpoint");
@@ -50,7 +56,7 @@ function tagElement(e,lat,lon){
   if(t.amenity==="place_of_worship"||t.building==="church"||t.building==="chapel")s.push("church");
   if(t.waterway==="river")s.push("river");
   var kw=s.length?(KIND_WORDS[s[0]]||"spot"):"spot";
-  return {airfield:false,name:t.name||null,distKm:d,subjects:s,kindWord:kw};
+  return {airfield:false,name:t.name||null,distKm:d,subjects:s,kindWord:kw,lat:la,lon:lo};
 }
 function buildOverpassQuery(lat,lon){
   var a="around:12000,"+lat+","+lon, b="around:5000,"+lat+","+lon;
@@ -67,6 +73,24 @@ function buildOverpassQuery(lat,lon){
     ");out center tags;";
 }
 function fmtDist(km){return E.fmtDist(km);}
+var AIRSPACE_MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+/* "2026-10-17" -> "17 Oct". Anything else passes through unchanged. */
+function fmtDatasetDate(s){
+  if(!s)return null;
+  var m=String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m){var mo=parseInt(m[2],10);if(mo>=1&&mo<=12)return parseInt(m[3],10)+" "+AIRSPACE_MONTHS[mo-1];}
+  return String(s);
+}
+/* Pure: verdict for one card. vloc is {lat,lon} or null; air is the loaded
+   dataset record {areas,updated} or null. Never returns "clear" without data. */
+function airspaceVerdict(vloc,air){
+  if(!vloc||vloc.lat==null||vloc.lon==null)return {state:"noloc",areaName:null,updated:null};
+  if(!air||!air.areas)return {state:"unavailable",areaName:null,updated:null};
+  var v=E.checkAirspace(vloc.lat,vloc.lon,air.areas);
+  return {state:v.state,
+    areaName:v.area?(v.area.name||v.area.label||"this area"):null,
+    updated:air.updated||null};
+}
 
 /* Pure: turn a deck entry + context into everything the main card needs (Alan's Neo 2). */
 function cardData(entry,ctx,who){
@@ -78,6 +102,12 @@ function cardData(entry,ctx,who){
   if(ctx&&ctx.airfield&&ctx.airfield.distKm!=null&&ctx.airfield.distKm<5){
     air={name:ctx.airfield.name||"an unnamed airfield",dist:fmtDist(ctx.airfield.distKm)};
   }
+  /* Airspace verdict: the POI's spot when the idea has one, else where you are. */
+  var vloc=null;
+  if(poi&&poi.lat!=null&&poi.lon!=null)vloc={lat:poi.lat,lon:poi.lon};
+  else if(ctx&&ctx.lat!=null&&ctx.lon!=null)vloc={lat:ctx.lat,lon:ctx.lon};
+  var airspace=airspaceVerdict(vloc,ctx?ctx.airspace:null);
+  airspace.updatedLabel=fmtDatasetDate(airspace.updated);
   return {
     kind:idea.kind, kindLabel:idea.kind==="shot"?"Flying shot":(idea.kind==="setting"?"Camera setting":"Composition"),
     title:E.fillPlace(idea.title,poi),
@@ -87,17 +117,22 @@ function cardData(entry,ctx,who){
     droneChip:E.DRONES.neo2.chip,
     ronnie:ronnie?{badge:ronnie.badge,title:ronnie.title,text:ronnie.text,id:ronnie.id,strand:ronnie.strand,level:ronnie.level,
       droneChip:E.DRONES.neo.chip}:null,
-    air:air, ideaId:idea.id
+    air:air, airspace:airspace, ideaId:idea.id
   };
 }
 /* Pure: turn a ladder task + context into the Ronnie hero card payload (original Neo). */
 function ladderData(task,ctx){
   var p=(ctx&&ctx.pois&&ctx.pois.length)?ctx.pois[0]:null;
+  /* Ladder verdict: always where you are, never the POI. */
+  var vloc=(ctx&&ctx.lat!=null&&ctx.lon!=null)?{lat:ctx.lat,lon:ctx.lon}:null;
+  var airspace=airspaceVerdict(vloc,ctx?ctx.airspace:null);
+  airspace.updatedLabel=fmtDatasetDate(airspace.updated);
   return {
     id:task.id,badge:task.badge,strand:task.strand,level:task.level,
     title:task.title,text:task.text,
     place:p?("Near "+E.placeLabel(p)):"",
     droneChip:E.DRONES.neo.chip,
+    airspace:airspace,
     levelLine:"Level "+task.level+" · "+(task.strand==="fly"?"Ronnie flies, Alan spots":task.strand==="eye"?"Alan flies, Ronnie observes":"Drone law, bite-size")
   };
 }
@@ -114,7 +149,7 @@ function pickNext(deck,shownIds,startIdx,idOf){
 
 /* ---------- state + storage ---------- */
 var S={lat:null,lon:null,locality:null,deck:[],idx:-1,ladder:[],lidx:-1,pois:[],
-       airfield:null,noGeo:false,seed:"",storeKey:"",store:{ideaIds:[],ronnieIds:[],strands:[]},who:"alan"};
+       airfield:null,airspace:null,noGeo:false,seed:"",storeKey:"",store:{ideaIds:[],ronnieIds:[],strands:[]},who:"alan"};
 function storeKey(){return "nsi_"+E.dayKey();}
 function loadStore(){
   S.storeKey=storeKey();
@@ -125,7 +160,8 @@ function loadStore(){
 }
 function saveStore(){try{localStorage.setItem(S.storeKey,JSON.stringify(S.store));}catch(e){}}
 function ctx(){
-  return {seed:S.seed,shownRonnieIds:S.store.ronnieIds,strandHistory:S.store.strands,airfieldNear:!!(S.airfield&&S.airfield.distKm<5),airfield:S.airfield,pois:S.pois};
+  return {seed:S.seed,shownRonnieIds:S.store.ronnieIds,strandHistory:S.store.strands,airfieldNear:!!(S.airfield&&S.airfield.distKm<5),airfield:S.airfield,pois:S.pois,
+    lat:S.lat,lon:S.lon,airspace:S.airspace};
 }
 function recordRonnie(r){
   if(S.store.ronnieIds.indexOf(r.id)<0){S.store.ronnieIds.push(r.id);S.store.strands.push(r.strand);saveStore();}
@@ -162,6 +198,29 @@ function renderAir(c){
   if(c.air){ab.classList.remove("hidden");ab.innerHTML="<b>Near an airfield</b> — "+esc(c.air.name)+" is "+esc(c.air.dist)+" away. Check the <b>Drone Assist</b> app before flying.";}
   else ab.classList.add("hidden");
 }
+/* Airspace banner: one of five states on every card render. The element
+   starts hidden in markup and is only ever shown with a fresh verdict. */
+function renderAirspace(c){
+  var ab=$("airspace-banner");
+  if(!c||!c.airspace){ab.classList.add("hidden");return;}
+  var a=c.airspace;
+  if(a.state==="restricted"){
+    ab.classList.remove("hidden");
+    ab.innerHTML="<b>Don't fly here</b> — "+esc(a.areaName)+" is restricted airspace. Tap 'Give me another idea' for a spot that's clear.";
+  }else if(a.state==="near"){
+    ab.classList.remove("hidden");
+    ab.innerHTML="<b>Heads up</b> — restricted airspace very close by ("+esc(a.areaName)+"). Keep well clear.";
+  }else if(a.state==="clear"){
+    ab.classList.remove("hidden");
+    ab.innerHTML="<small>Airspace clear"+(a.updatedLabel?" · data "+esc(a.updatedLabel):"")+"</small>";
+  }else if(a.state==="unavailable"){
+    ab.classList.remove("hidden");
+    ab.innerHTML="<b>Airspace check unavailable</b> — check Drone Assist before you fly.";
+  }else if(a.state==="noloc"){
+    ab.classList.remove("hidden");
+    ab.innerHTML="<b>No location set</b> — check Drone Assist before you fly.";
+  }else ab.classList.add("hidden");
+}
 function render(entry){
   var c=cardData(entry,ctx(),S.who);
   $("ladder-hero").classList.add("hidden");
@@ -177,6 +236,7 @@ function render(entry){
   $("idea-kicker").textContent=S.who==="both"?"Today's flying project · Alan's Neo 2":"Today's flying project";
   $("idea-loc").textContent=locLine();
   renderAir(c);
+  renderAirspace(c);
   var rc=$("ronnie-card");
   if(c.ronnie){
     rc.classList.remove("hidden");
@@ -206,6 +266,7 @@ function renderLadder(task){
   $("idea-kicker").textContent="Ronnie's flying-skills ladder";
   $("idea-loc").textContent=locLine();
   renderAir({air:(ctx().airfield&&ctx().airfield.distKm<5)?{name:ctx().airfield.name||"an unnamed airfield",dist:fmtDist(ctx().airfield.distKm)}:null});
+  renderAirspace(c);
   recordRonnie({id:c.id,strand:c.strand});
   var remaining=S.ladder.length-S.store.ronnieIds.filter(function(id){return S.ladder.some(function(t){return t.id===id;});}).length;
   $("count-line").textContent=remaining>0?(remaining+" more missions in the ladder"):"That's the whole ladder — well flown, Ronnie";
@@ -287,7 +348,50 @@ function bootWithoutLocation(){
   showNextAny();
   $("idea-loc").textContent="Location off — these are general ideas. Tap below to use your location.";
 }
+/* ---------- restricted airspace: load + cache ---------- */
+function readAirspaceCache(){
+  try{
+    var raw=localStorage.getItem(AIRSPACE_KEY);
+    if(!raw)return null;
+    var p=JSON.parse(raw);
+    var v=E.validateAirspace(p);
+    if(!v)return null;
+    var age=Date.now()-new Date(p.fetchedAt||0).getTime();
+    if(!(age>=0&&age<=AIRSPACE_MAX_AGE))return null;
+    return {areas:v.areas,updated:v.updated,fetchedAt:p.fetchedAt};
+  }catch(e){return null;}
+}
+function saveAirspaceCache(rec){try{localStorage.setItem(AIRSPACE_KEY,JSON.stringify(rec));}catch(e){}}
+/* Network-first. Invalid live data counts as a failed load and falls back
+   to a fresh cache; with neither, S.airspace stays null (unavailable). */
+async function loadAirspace(){
+  var rec=null;
+  try{
+    var r=await fetch(AIRSPACE_URL);
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    var j=await r.json();
+    var v=E.validateAirspace(j);
+    if(!v)throw new Error("invalid airspace data");
+    rec={areas:v.areas,updated:v.updated,fetchedAt:new Date().toISOString()};
+    saveAirspaceCache(rec);
+  }catch(e){
+    rec=readAirspaceCache();
+  }
+  S.airspace=rec;
+  refreshAirspaceBanner();
+}
+/* A late airspace load corrects the current card's banner without
+   advancing to the next idea, scrolling, or touching the store: only the
+   banner element is re-rendered. No-op while still on the loading screen. */
+function refreshAirspaceBanner(){
+  if(S.who==="ronnie"){
+    if(S.lidx>=0&&S.ladder.length)renderAirspace(ladderData(S.ladder[S.lidx],ctx()));
+  }else{
+    if(S.idx>=0&&S.deck.length)renderAirspace(cardData(S.deck[S.idx],ctx(),S.who));
+  }
+}
 function locate(){
+  loadAirspace();
   setLoading("Looking around for somewhere worth filming…","Asking your iPhone where you are.");
   if(!navigator.geolocation){bootWithoutLocation();return;}
   var done=false;
@@ -319,6 +423,6 @@ if(typeof document!=="undefined"&&document.getElementById){wire();}
 if(typeof module!=="undefined"&&module.exports){
   module.exports={haversine:haversine,tagElement:tagElement,buildOverpassQuery:buildOverpassQuery,
     cardData:cardData,ladderData:ladderData,pickNext:pickNext,KIND_WORDS:KIND_WORDS,
-    WHO_META:WHO_META,WHOS:WHOS};
+    WHO_META:WHO_META,WHOS:WHOS,airspaceVerdict:airspaceVerdict,fmtDatasetDate:fmtDatasetDate};
 }
 })();
