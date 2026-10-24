@@ -6,18 +6,17 @@
 <title>Neo Shot Ideas — a fresh flying project every day</title>
 <meta name="description" content="Every launch, a fresh DJI Neo / Neo 2 project idea picked for where you are — shots, camera settings and composition, plus a flying-skills mission for Ronnie.">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0d1418">
+<meta name="theme-color" content="#FAF7F1">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Shot Ideas">
 <link rel="apple-touch-icon" href="icon-180.png">
 <style>
 :root{
-  --bg:#0d1418;--surface:#152027;--surface-2:#1d2b33;--ink:#edf2f4;--muted:#afbcc3;--line:#34434c;
-  --accent:#f5c847;--accent-ink:#1a1707;--amber:#f2b84b;--amber-soft:#3e321a;
-  --green:#54d49c;--red:#ff6e75;
-  --shadow:0 16px 34px rgba(0,0,0,.32);--radius:20px;
+  --bg:#FAF7F1;--surface:#FFFDF7;--surface-2:#F3EDE0;--ink:#1A1C19;--muted:#5C6B66;--line:#D8CFBC;
+  --accent:#D9A441;--accent-ink:#1A1C19;--accent-text:#8f570d;--amber:#D9A441;--amber-soft:#F7EED3;
+  --shadow:none;--radius:20px;
 }
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 *{box-sizing:border-box}
@@ -26,12 +25,12 @@ body{margin:0;padding-top:env(safe-area-inset-top);background:var(--bg);color:va
   font-size:19px;line-height:1.55}
 button{font:inherit;touch-action:manipulation}
 button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
-.topline{height:8px;background:linear-gradient(90deg,var(--accent) 0 60%,var(--green) 60% 82%,var(--amber) 82%)}
+.topline{height:8px;background:var(--accent)}
 .wrap{max-width:640px;margin:0 auto;padding:26px max(20px,env(safe-area-inset-right)) 120px max(20px,env(safe-area-inset-left))}
 .meta{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;letter-spacing:.09em;
   text-transform:uppercase;color:var(--muted);margin:0 0 10px}
 h1{font-weight:800;font-size:clamp(46px,12vw,72px);line-height:.95;margin:10px 0 8px;letter-spacing:.01em}
-h1 .amber{color:var(--accent)}
+h1 .amber{color:var(--accent-text)}
 .lede{font-size:20px;color:var(--muted);margin:0 0 26px;max-width:36ch}
 .big-btn{display:block;width:100%;border:0;border-radius:var(--radius);background:var(--accent);color:var(--accent-ink);
   font-weight:800;font-size:clamp(30px,8vw,42px);letter-spacing:.01em;
@@ -40,37 +39,37 @@ h1 .amber{color:var(--accent)}
 .big-btn[disabled]{opacity:.6;cursor:wait}
 .ghost-btn{display:block;width:100%;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);
   color:var(--ink);font-weight:700;font-size:20px;padding:18px;margin:12px 0;cursor:pointer;min-height:64px}
-.card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;margin:18px 0}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;margin:18px 0}
 .kind-tag{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;
   letter-spacing:.1em;text-transform:uppercase;color:var(--accent-ink);background:var(--accent);
   border-radius:999px;padding:6px 14px;margin-bottom:12px;font-weight:700}
 .card h2{font-size:34px;line-height:1.1;margin:0 0 6px}
-.place-line{font-size:20px;color:var(--accent);font-weight:700;margin:0 0 14px}
+.place-line{font-size:20px;color:var(--accent-text);font-weight:700;margin:0 0 14px}
 .steps{margin:14px 0 0;padding:0;list-style:none;counter-reset:st}
 .steps li{counter-increment:st;position:relative;padding:12px 0 12px 58px;font-size:20px;border-top:1px solid var(--line)}
 .steps li:first-child{border-top:0}
 .steps li::before{content:counter(st);position:absolute;left:0;top:12px;width:42px;height:42px;border-radius:50%;
-  background:var(--surface-2);color:var(--accent);font-weight:800;font-size:22px;
+  background:var(--surface-2);color:var(--ink);font-weight:800;font-size:22px;
   display:flex;align-items:center;justify-content:center;border:2px solid var(--accent)}
 .idea-note{margin:16px 0 0;padding:14px 16px;background:var(--surface-2);border-radius:14px;font-size:19px;color:var(--muted)}
 .idea-note b{color:var(--ink)}
-.ronnie{border-left:10px solid var(--accent);background:#1a1610}
+.ronnie{border-left:10px solid var(--accent);background:#F7EED3}
 .ronnie .kind-tag{background:var(--accent)}
 .ronnie h2{font-size:30px}
 .ronnie .badge{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;letter-spacing:.09em;
-  color:var(--accent);margin:0 0 8px;text-transform:uppercase}
+  color:var(--accent-text);margin:0 0 8px;text-transform:uppercase}
 .ronnie p{font-size:21px;margin:8px 0 0}
 .air-banner{background:var(--amber-soft);border:2px solid var(--amber);border-radius:14px;
   padding:16px 18px;font-size:20px;margin:18px 0;color:var(--ink)}
-.air-banner b{color:var(--amber)}
+.air-banner b{color:var(--accent-text)}
 .loc-line{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;color:var(--muted);margin:4px 0 0}
 .loading{text-align:center;padding:60px 10px}
 .loading .big{font-size:26px;font-weight:700;margin:18px 0 6px}
 .loading .sub{font-size:19px;color:var(--muted)}
-.spin{display:inline-block;width:44px;height:44px;border:5px solid rgba(255,255,255,.2);border-top-color:var(--accent);
+.spin{display:inline-block;width:44px;height:44px;border:5px solid rgba(26,28,25,.15);border-top-color:var(--accent);
   border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
-.fly-footer{position:fixed;left:0;right:0;bottom:0;z-index:50;background:#0a0f12f2;border-top:2px solid var(--line);
+.fly-footer{position:fixed;left:0;right:0;bottom:0;z-index:50;background:#FFFDF7;border-top:2px solid var(--line);
   padding:12px max(16px,env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
   font-size:15px;color:var(--muted);text-align:center}
 .fly-footer b{color:var(--ink)}
@@ -83,7 +82,7 @@ h1 .amber{color:var(--accent)}
 .who-btn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .who-sub{font-size:17px;color:var(--muted);margin:12px 0 0}
 .drone-chip{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:15px;
-  letter-spacing:.04em;color:var(--accent);background:#22303a;border:1px solid var(--line);
+  letter-spacing:.04em;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);
   border-radius:999px;padding:7px 14px;margin:0 0 14px}
 .ladder-hero h2{font-size:40px}
 .ladder-hero .mission-text{font-size:25px;line-height:1.5;margin:10px 0 14px}
@@ -179,7 +178,7 @@ if('serviceWorker' in navigator){window.addEventListener('load',function(){navig
 </script>
 
 <!-- bug report -->
-<div id="bugreport-link" style="text-align:center;padding:18px 12px;font:13px/1.6 system-ui,-apple-system,sans-serif;color:#8a8a8a">
+<div id="bugreport-link" style="text-align:center;padding:18px 12px;font:13px/1.6 system-ui,-apple-system,sans-serif;color:#5C6B66">
   Spotted something wrong? <a href="mailto:ian.cleary@gmail.com?subject=Bug%20report%3A%20Neo%20Shot%20Ideas&body=Site%3A%20https%3A//ian-cleary.github.io/neo-shot-ideas/%0A%0AWhat%20went%20wrong%3A%0A%0AWhat%20you%20expected%3A%0A" style="color:inherit;text-decoration:underline">Report a bug 🐞</a>
 </div>
 </body>
