@@ -1,6 +1,6 @@
 /* Neo Shot Ideas — offline shell. Cache-first for same-origin assets,
    network-first for API calls with graceful offline fallback. */
-var CACHE="nsi-v2";
+var CACHE="nsi-v3";
 var SHELL=["./","./index.html","./engine.js","./app.js","./manifest.webmanifest",
   "./icon-192.png","./icon-512.png","./icon-180.png","./icon-152.png","./icon-120.png",
   "./icon-512-maskable.png"];
