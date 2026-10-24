@@ -401,8 +401,89 @@ function fillPlace(text,poi){
   return String(text).split("{place}").join(nm);
 }
 
+/* ---------------- restricted-airspace geometry (pure, no DOM) ----------------
+   Coordinates are [lat, lon] as in restricted.json. alt_ft is deliberately
+   ignored: with no floor field, every area is treated as covering drone
+   altitudes (maximum flyer safety). */
+function num(v){return typeof v==="number"&&isFinite(v);}
+function haversineKm(lat1,lon1,lat2,lon2){
+  const R=6371,t=Math.PI/180;
+  const dLat=(lat2-lat1)*t,dLon=(lon2-lon1)*t;
+  const h=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*t)*Math.cos(lat2*t)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+/* Ray casting, x = lon, y = lat. poly entries are [lat, lon]. */
+function pointInPolygon(lat,lon,poly){
+  let inside=false;
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+    const xi=poly[i][1],yi=poly[i][0],xj=poly[j][1],yj=poly[j][0];
+    if(((yi>lat)!==(yj>lat))&&(lon<(xj-xi)*(lat-yi)/(yj-yi)+xi))inside=!inside;
+  }
+  return inside;
+}
+/* Distance (metres) from a point to a segment, via a local equirectangular
+   projection centred on the point — plenty accurate inside the 500 m band. */
+function pointToSegmentM(lat,lon,lat1,lon1,lat2,lon2){
+  const t=Math.PI/180,kx=111320*Math.cos(lat*t),ky=110540;
+  const x1=(lon1-lon)*kx,y1=(lat1-lat)*ky,x2=(lon2-lon)*kx,y2=(lat2-lat)*ky;
+  const dx=x2-x1,dy=y2-y1,len2=dx*dx+dy*dy;
+  const u=len2===0?0:Math.max(0,Math.min(1,(-x1*dx-y1*dy)/len2));
+  const px=x1+u*dx,py=y1+u*dy;
+  return Math.sqrt(px*px+py*py);
+}
+const AIRSPACE_NEAR_M=500;
+/* Verdict for one point against restricted areas. Returns {state, area}:
+   "restricted" inside any polygon or within any circle radius;
+   "near" outside but within 500 m of any boundary; else "clear".
+   Areas with no usable geometry are skipped. Never throws. */
+function checkAirspace(lat,lon,areas){
+  const none={state:"clear",area:null};
+  if(!num(lat)||!num(lon)||!Array.isArray(areas))return none;
+  let near=null,nearDist=Infinity;
+  for(let ai=0;ai<areas.length;ai++){
+    const a=areas[ai];
+    if(!a||typeof a!=="object")continue;
+    try{
+      if(Array.isArray(a.circle)&&a.circle.length>=2&&num(a.circle[0])&&num(a.circle[1])&&num(a.radius_km)&&a.radius_km>0){
+        const dKm=haversineKm(lat,lon,a.circle[0],a.circle[1]);
+        if(dKm<=a.radius_km)return {state:"restricted",area:a};
+        const beyond=(dKm-a.radius_km)*1000;
+        if(beyond<=AIRSPACE_NEAR_M&&beyond<nearDist){nearDist=beyond;near=a;}
+        continue;
+      }
+      if(Array.isArray(a.poly)){
+        const pts=[];
+        for(let pi=0;pi<a.poly.length;pi++){
+          const p=a.poly[pi];
+          if(Array.isArray(p)&&p.length>=2&&num(p[0])&&num(p[1]))pts.push([p[0],p[1]]);
+        }
+        if(pts.length<3)continue;
+        if(pointInPolygon(lat,lon,pts))return {state:"restricted",area:a};
+        let edge=Infinity;
+        for(let ei=0;ei<pts.length;ei++){
+          const q1=pts[ei],q2=pts[(ei+1)%pts.length];
+          const dm=pointToSegmentM(lat,lon,q1[0],q1[1],q2[0],q2[1]);
+          if(dm<edge)edge=dm;
+        }
+        if(edge<=AIRSPACE_NEAR_M&&edge<nearDist){nearDist=edge;near=a;}
+      }
+    }catch(e){continue;}
+  }
+  if(near)return {state:"near",area:near};
+  return none;
+}
+/* Validate a restricted.json payload. Returns {areas, updated} or null.
+   Only the top level is validated here; individual areas are skipped
+   by checkAirspace if malformed. */
+function validateAirspace(data){
+  if(!data||typeof data!=="object"||!Array.isArray(data.areas)||!data.areas.length)return null;
+  return {areas:data.areas,updated:(typeof data.updated==="string"&&data.updated)?data.updated:null};
+}
+
 var ENGINE={IDEAS:IDEAS,RONNIE_TASKS:RONNIE_TASKS,DRONES:DRONES,seededRandom:seededRandom,shuffleSeeded:shuffleSeeded,
  dayKey:dayKey,seedFor:seedFor,fmtDist:fmtDist,placeLabel:placeLabel,buildDeck:buildDeck,
- buildLadderDeck:buildLadderDeck,pickRonnie:pickRonnie,fillPlace:fillPlace};
+ buildLadderDeck:buildLadderDeck,pickRonnie:pickRonnie,fillPlace:fillPlace,
+ checkAirspace:checkAirspace,validateAirspace:validateAirspace,haversineKm:haversineKm,
+ pointInPolygon:pointInPolygon,pointToSegmentM:pointToSegmentM};
 if(typeof module!=="undefined"&&module.exports){module.exports=ENGINE;}
 if(typeof window!=="undefined"){window.NeoEngine=ENGINE;}
